@@ -1,0 +1,6 @@
+{
+  "name": "Türkçe Telaffuz & Diksiyon Asistanı",
+  "description": "Tarayıcı üzerinde çalışan etkileşimli Türkçe telaffuz, diksiyon, ses dalgası analizi ve A1-B2 diyalog çalışma asistanı.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

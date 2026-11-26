@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import {
   ActivityType,
@@ -8,10 +8,10 @@ import {
   StudentActivityRecord,
   StudentProfile,
   UserStats,
-  WordAnalysis,
 } from './types';
 import {
   auth,
+  completeDictionLevel,
   ensureStudentProfile,
   isAdminUser,
   logoutStudent,
@@ -21,13 +21,12 @@ import {
   subscribeStudentProfile,
   updateStudentSettings,
 } from './firebase';
+import { DICTION_CURRICULUM } from './data/dictionCurriculum';
 import { AppTab, Header } from './components/Header';
 import { AuthGate } from './components/AuthGate';
-import { DialogueViewer } from './components/DialogueViewer';
 import { DictionGuide } from './components/DictionGuide';
 import { TekerlemelerView } from './components/TekerlemelerView';
 import { FreePracticeStudio } from './components/FreePracticeStudio';
-import { WordAnalysisModal } from './components/WordAnalysisModal';
 import { PronunciationStudioModal } from './components/PronunciationStudioModal';
 import { StudentProgressProfile } from './components/StudentProgressProfile';
 import { AdminStudentsDashboard } from './components/AdminStudentsDashboard';
@@ -42,12 +41,10 @@ export default function App() {
   const [allStudents, setAllStudents] = useState<StudentProfile[]>([]);
   const [isLoadingActivities, setIsLoadingActivities] = useState<boolean>(false);
 
-  const [currentTab, setCurrentTab] = useState<AppTab>('dialogues');
+  // First & default tab is Diksiyon Bilgileri
+  const [currentTab, setCurrentTab] = useState<AppTab>('guide');
 
-  // Word Analysis Modal state
-  const [activeWordAnalysis, setActiveWordAnalysis] = useState<WordAnalysis | null>(null);
-
-  // Pronunciation Studio Modal state (for Diction Guide, Tongue Twisters, Word Practice)
+  // Pronunciation Studio Modal state (for Tongue Twisters quick practice)
   const [activePracticeSession, setActivePracticeSession] = useState<{
     sentence: string;
     contextTitle: string;
@@ -75,7 +72,7 @@ export default function App() {
         setStudentActivities([]);
         setAllStudents([]);
         setSessionHistory([]);
-        setCurrentTab('dialogues');
+        setCurrentTab('guide');
       }
       setAuthReady(true);
     });
@@ -110,33 +107,50 @@ export default function App() {
     };
   }, [authReady, authUser]);
 
-  const handleSaveActivity = async ({
-    evaluation,
-    historyItem,
-    activityType,
-    contextTitle,
-  }: {
-    evaluation: PronunciationEvaluation;
-    historyItem: PracticeHistoryItem;
-    activityType: ActivityType;
-    contextTitle: string;
-  }) => {
-    setSessionHistory((prev) => [historyItem, ...prev].slice(0, 15));
+  const handleSaveActivity = useCallback(
+    async ({
+      evaluation,
+      historyItem,
+      activityType,
+      contextTitle,
+    }: {
+      evaluation: PronunciationEvaluation;
+      historyItem: PracticeHistoryItem;
+      activityType: ActivityType;
+      contextTitle: string;
+    }) => {
+      setSessionHistory((prev) => [historyItem, ...prev].slice(0, 15));
 
-    if (!authUser || !studentProfile) return;
+      if (!authUser || !studentProfile) return;
 
-    try {
-      await recordStudentActivity({
+      try {
+        await recordStudentActivity({
+          uid: authUser.uid,
+          profile: studentProfile,
+          activityType,
+          contextTitle,
+          evaluation,
+        });
+      } catch (err) {
+        console.error('Etkinlik kaydedilemedi:', err);
+      }
+    },
+    [authUser, studentProfile]
+  );
+
+  const handleCompleteDictionLevel = useCallback(
+    async (levelId: string, levelOrder: number) => {
+      if (!authUser || !studentProfile) return;
+      await completeDictionLevel({
         uid: authUser.uid,
         profile: studentProfile,
-        activityType,
-        contextTitle,
-        evaluation,
+        levelId,
+        levelOrder,
+        maxLevelOrder: DICTION_CURRICULUM.length,
       });
-    } catch (err) {
-      console.error('Etkinlik kaydedilemedi:', err);
-    }
-  };
+    },
+    [authUser, studentProfile]
+  );
 
   const handleOpenPractice = (
     sentence: string,
@@ -194,25 +208,11 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {currentTab === 'dialogues' && (
-          <DialogueViewer
-            onOpenWordAnalysis={setActiveWordAnalysis}
-            onSaveResult={handleSaveActivity}
-          />
-        )}
-
-        {currentTab === 'studio' && (
-          <FreePracticeStudio
-            history={sessionHistory}
-            onSaveResult={handleSaveActivity}
-          />
-        )}
-
         {currentTab === 'guide' && (
           <DictionGuide
-            onPracticeSentence={(sentence, title) =>
-              handleOpenPractice(sentence, title, 'diction')
-            }
+            profile={studentProfile}
+            onSaveResult={handleSaveActivity}
+            onCompleteLevel={handleCompleteDictionLevel}
           />
         )}
 
@@ -224,6 +224,13 @@ export default function App() {
           />
         )}
 
+        {currentTab === 'studio' && (
+          <FreePracticeStudio
+            history={sessionHistory}
+            onSaveResult={handleSaveActivity}
+          />
+        )}
+
         {currentTab === 'profile' && studentProfile && (
           <StudentProgressProfile
             profile={studentProfile}
@@ -232,7 +239,7 @@ export default function App() {
             isLoadingActivities={isLoadingActivities}
             onUpdateProfile={handleUpdateProfile}
             onLogout={handleLogout}
-            onStartPractice={() => setCurrentTab('studio')}
+            onStartPractice={() => setCurrentTab('guide')}
           />
         )}
 
@@ -240,17 +247,6 @@ export default function App() {
           <AdminStudentsDashboard students={allStudents} />
         )}
       </main>
-
-      {/* Word Morphology & Breakdown Modal */}
-      {activeWordAnalysis && (
-        <WordAnalysisModal
-          wordData={activeWordAnalysis}
-          onClose={() => setActiveWordAnalysis(null)}
-          onPracticeWord={(word) => {
-            handleOpenPractice(word, `Kelime Pratiği: ${word}`, 'word');
-          }}
-        />
-      )}
 
       {/* Real-time Pronunciation & Audio Waveform Studio Modal */}
       {activePracticeSession && (
@@ -273,14 +269,14 @@ export default function App() {
       <footer className="border-t border-[#EAE6DF] bg-[#F5F2EB] py-6 px-4 sm:px-6 mt-12 text-center text-xs text-stone-500">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="font-medium text-stone-700">
-            Türkçe Telaffuz, Diksiyon ve Diyalog Asistanı
+            Türkçe Telaffuz ve Diksiyon Asistanı
           </p>
           <div className="flex items-center gap-3 text-stone-500">
+            <span>Seviyeli Diksiyon Eğitimi</span>
+            <span aria-hidden="true">·</span>
             <span>Web Speech API (tr-TR)</span>
             <span aria-hidden="true">·</span>
             <span>Web Audio API Akustik Analiz</span>
-            <span aria-hidden="true">·</span>
-            <span>A1–B2 Gelişim Takibi</span>
           </div>
         </div>
       </footer>

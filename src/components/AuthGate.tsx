@@ -136,8 +136,9 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
               Kişisel Telaffuz ve Gelişim Takibinizle Akıcı Türkçe Konuşun
             </h1>
             <p className="text-sm sm:text-base text-indigo-100/90 leading-relaxed">
-              Kullanıcı adınız ve şifrenizle giriş yapın; yaptığınız her diyalog, tekerleme ve ses
-              analizi ilk etkinliğinizden itibaren profilinizde kayıt altında tutulsun.
+              Kullanıcı adınız ve şifrenizle giriş yapın; ünlülerle başlayan aşamalı diksiyon
+              seviyeleri, tekerlemeler ve ses analizleriniz ilk etkinliğinizden itibaren profilinizde
+              kayıt altında tutulsun.
             </p>
           </div>
 
@@ -165,9 +166,9 @@ export const AuthGate: React.FC<AuthGateProps> = ({ onAuthSuccess }) => {
             <div className="flex items-start gap-3">
               <BookOpen className="w-5 h-5 text-[#34D399] shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-white">A1–B2 Diyaloglar & Morfoloji</p>
+                <p className="font-semibold text-white">Ünlülerle Başlayan Seviyeli Diksiyon Yolu</p>
                 <p className="text-xs text-indigo-200 mt-0.5">
-                  Günlük Türkçe diyalogları dinleyin, ek-kök analizlerini inceleyin ve diksiyonunuzu güçlendirin.
+                  A ünlüsünden başlayarak her seviye sonunda soru ve ses analiziyle yeni anahtarları açın, istediğiniz zaman tekrar edin.
                 </p>
               </div>
             </div>

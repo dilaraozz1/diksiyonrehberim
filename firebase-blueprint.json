@@ -83,6 +83,14 @@
           "maxLength": 40,
           "description": "ISO timestamp of the most recent activity, or empty string before first activity."
         },
+        "unlockedLevelOrder": {
+          "type": "integer",
+          "description": "Highest unlocked level order (1-50) in the Duolingo-style diction curriculum; starts at 1 (A vowel)."
+        },
+        "completedLevelIds": {
+          "type": "array",
+          "description": "List of completed diction level IDs (max 50) that can be freely revisited and repeated."
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time",

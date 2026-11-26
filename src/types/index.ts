@@ -114,6 +114,8 @@ export interface StudentProfile {
   perfectWordsCount: number;
   firstActivityAt: string;
   lastActivityAt: string;
+  unlockedLevelOrder?: number;
+  completedLevelIds?: string[];
   createdAt?: unknown;
   updatedAt?: unknown;
 }

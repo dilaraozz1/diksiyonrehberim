@@ -5,6 +5,7 @@ import {
   StudentActivityRecord,
   StudentProfile,
 } from '../types';
+import { DICTION_CURRICULUM } from '../data/dictionCurriculum';
 import {
   TrendingUp,
   TrendingDown,
@@ -207,6 +208,10 @@ export const StudentProgressProfile: React.FC<StudentProgressProfileProps> = ({
                 <span className="font-mono font-semibold text-[#059669]">@{profile.username}</span>
                 <span aria-hidden="true">·</span>
                 <span>Hedef Seviye: {profile.targetLevel}</span>
+                <span aria-hidden="true">·</span>
+                <span className="font-mono font-semibold text-[#1E1B4B]">
+                  Diksiyon Seviyesi: {profile.completedLevelIds?.length ?? 0}/{DICTION_CURRICULUM.length}
+                </span>
                 {profile.firstActivityAt && (
                   <>
                     <span aria-hidden="true">·</span>
@@ -385,7 +390,7 @@ export const StudentProgressProfile: React.FC<StudentProgressProfileProps> = ({
             </h3>
             <p className="text-sm text-stone-600 leading-relaxed">
               {isOwnProfile
-                ? 'Herhangi bir diyalog, tekerleme veya ses stüdyosu cümlesini seslendirdiğinizde, ilk etkinliğinizden itibaren gelişim grafiğiniz burada otomatik olarak oluşacaktır.'
+                ? 'Herhangi bir diksiyon seviyesi değerlendirmesi, tekerleme veya ses analizi tamamladığınızda ilk etkinliğinizden itibaren gelişim grafiğiniz burada otomatik olarak oluşacaktır.'
                 : 'Bu öğrenci henüz sesli bir etkinlik tamamlamamış.'}
             </p>
           </div>
@@ -396,7 +401,7 @@ export const StudentProgressProfile: React.FC<StudentProgressProfileProps> = ({
               className="px-5 py-2.5 bg-[#059669] hover:bg-[#047857] text-white font-semibold rounded-xl text-sm inline-flex items-center gap-2 cursor-pointer transition-colors"
             >
               <Mic className="w-4 h-4" />
-              <span>Ses Analiz Stüdyosuna Git</span>
+              <span>Diksiyon Seviyelerine Başla</span>
             </button>
           )}
         </div>

@@ -217,6 +217,8 @@ export async function ensureStudentProfile(
       perfectWordsCount: 0,
       firstActivityAt: '',
       lastActivityAt: '',
+      unlockedLevelOrder: 1,
+      completedLevelIds: [],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -288,6 +290,42 @@ export async function updateStudentSettings(
     await updateDoc(docRef, {
       displayName: clampString(displayName, 80) || 'Öğrenci',
       targetLevel,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+}
+
+/**
+ * Unlocks the next diction level and marks the completed level ID permanently in Firestore
+ * so students can always revisit and repeat unlocked lessons.
+ */
+export async function completeDictionLevel(params: {
+  uid: string;
+  profile: StudentProfile;
+  levelId: string;
+  levelOrder: number;
+  maxLevelOrder: number;
+}): Promise<void> {
+  const { uid, profile, levelId, levelOrder, maxLevelOrder } = params;
+  const path = `students/${uid}`;
+  const docRef = doc(db, 'students', uid);
+
+  const existingCompleted = Array.isArray(profile.completedLevelIds)
+    ? profile.completedLevelIds
+    : [];
+  const nextCompleted = Array.from(
+    new Set([...existingCompleted, clampString(levelId, 40)])
+  ).slice(0, 50);
+
+  const currentUnlocked = profile.unlockedLevelOrder ?? 1;
+  const nextUnlocked = Math.min(maxLevelOrder, Math.max(currentUnlocked, levelOrder + 1));
+
+  try {
+    await updateDoc(docRef, {
+      unlockedLevelOrder: nextUnlocked,
+      completedLevelIds: nextCompleted,
       updatedAt: serverTimestamp(),
     });
   } catch (error) {

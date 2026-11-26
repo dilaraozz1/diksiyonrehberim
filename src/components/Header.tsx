@@ -1,8 +1,9 @@
 import React from 'react';
 import { StudentProfile, UserStats } from '../types';
-import { Mic, BookOpen, Sparkles, TrendingUp, Users, User } from 'lucide-react';
+import { DICTION_CURRICULUM } from '../data/dictionCurriculum';
+import { Mic, BookOpen, Sparkles, TrendingUp, Users, User, KeyRound } from 'lucide-react';
 
-export type AppTab = 'dialogues' | 'studio' | 'guide' | 'twisters' | 'profile' | 'admin';
+export type AppTab = 'guide' | 'twisters' | 'studio' | 'profile' | 'admin';
 
 interface HeaderProps {
   currentTab: AppTab;
@@ -21,6 +22,9 @@ export const Header: React.FC<HeaderProps> = ({
   profile,
   isAdmin,
 }) => {
+  const completedLevels = profile?.completedLevelIds?.length ?? 0;
+  const totalLevels = DICTION_CURRICULUM.length;
+
   return (
     <header className="border-b border-[#EAE6DF] bg-[#FAF8F5]/95 backdrop-blur-md sticky top-0 z-30">
       {/* 3-Zone Top Bar Contract */}
@@ -29,36 +33,14 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Zone 1: Single text wordmark */}
           <button
             type="button"
-            onClick={() => onSelectTab('dialogues')}
+            onClick={() => onSelectTab('guide')}
             className="text-left font-extrabold text-xl sm:text-2xl tracking-tight text-[#1E1B4B] whitespace-nowrap shrink-0 hover:opacity-90 transition-opacity cursor-pointer"
           >
             Türkçe <span className="text-[#059669]">Diksiyon</span>
           </button>
 
-          {/* Zone 2: 5 concise single-line nav links */}
+          {/* Zone 2: 4 concise single-line nav links in exact requested order */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-stone-600">
-            <button
-              type="button"
-              onClick={() => onSelectTab('dialogues')}
-              className={`hover:text-[#1E1B4B] transition-colors whitespace-nowrap shrink-0 pb-1 border-b-2 cursor-pointer ${
-                currentTab === 'dialogues'
-                  ? 'border-[#059669] text-[#1E1B4B] font-semibold'
-                  : 'border-transparent'
-              }`}
-            >
-              Diyaloglar
-            </button>
-            <button
-              type="button"
-              onClick={() => onSelectTab('studio')}
-              className={`hover:text-[#1E1B4B] transition-colors whitespace-nowrap shrink-0 pb-1 border-b-2 cursor-pointer ${
-                currentTab === 'studio'
-                  ? 'border-[#059669] text-[#1E1B4B] font-semibold'
-                  : 'border-transparent'
-              }`}
-            >
-              Ses Analizi
-            </button>
             <button
               type="button"
               onClick={() => onSelectTab('guide')}
@@ -68,7 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
                   : 'border-transparent'
               }`}
             >
-              Diksiyon
+              Diksiyon Bilgileri
             </button>
             <button
               type="button"
@@ -80,6 +62,17 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               Tekerlemeler
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectTab('studio')}
+              className={`hover:text-[#1E1B4B] transition-colors whitespace-nowrap shrink-0 pb-1 border-b-2 cursor-pointer ${
+                currentTab === 'studio'
+                  ? 'border-[#059669] text-[#1E1B4B] font-semibold'
+                  : 'border-transparent'
+              }`}
+            >
+              Ses Analizi
             </button>
             <button
               type="button"
@@ -108,14 +101,13 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Mobile nav bar row for touch accessibility */}
+      {/* Mobile nav bar row in exact requested order */}
       <div className="md:hidden flex items-center justify-around border-t border-[#EAE6DF] px-2 py-2 bg-[#F5F2EC] overflow-x-auto gap-1">
         {(
           [
-            { id: 'dialogues', label: 'Diyaloglar' },
-            { id: 'studio', label: 'Ses Analizi' },
             { id: 'guide', label: 'Diksiyon' },
-            { id: 'twisters', label: 'Tekerleme' },
+            { id: 'twisters', label: 'Tekerlemeler' },
+            { id: 'studio', label: 'Ses Analizi' },
             { id: 'profile', label: 'Profilim' },
           ] as const
         ).map((item) => (
@@ -152,6 +144,16 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </>
             )}
+            <span className="flex items-center gap-1 font-medium text-stone-800">
+              <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+              Seviye:{' '}
+              <span className="font-mono tabular-nums font-semibold text-[#1E1B4B]">
+                {completedLevels}/{totalLevels}
+              </span>
+            </span>
+            <span aria-hidden="true" className="text-stone-400">
+              ·
+            </span>
             <span className="flex items-center gap-1 font-medium text-stone-800">
               <BookOpen className="w-3.5 h-3.5 text-[#059669]" />
               <span className="font-mono tabular-nums font-semibold">

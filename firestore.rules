@@ -60,7 +60,9 @@ service cloud.firestore {
           'totalAttempts', 'firstScore', 'latestScore', 'bestScore',
           'averageAccuracy', 'averageFluency', 'growthDelta',
           'totalPracticeSeconds', 'perfectWordsCount',
-          'firstActivityAt', 'lastActivityAt', 'createdAt', 'updatedAt'
+          'firstActivityAt', 'lastActivityAt',
+          'unlockedLevelOrder', 'completedLevelIds',
+          'createdAt', 'updatedAt'
         ])
         && isValidId(data.uid)
         && data.uid == studentId
@@ -82,6 +84,12 @@ service cloud.firestore {
         && data.perfectWordsCount is int && data.perfectWordsCount >= 0 && data.perfectWordsCount <= 10000000
         && data.firstActivityAt is string && data.firstActivityAt.size() <= 40
         && data.lastActivityAt is string && data.lastActivityAt.size() <= 40
+        && (!('unlockedLevelOrder' in data) || (data.unlockedLevelOrder is int && data.unlockedLevelOrder >= 1 && data.unlockedLevelOrder <= 50))
+        && (!('completedLevelIds' in data) || (
+          data.completedLevelIds is list
+          && data.completedLevelIds.size() <= 50
+          && (data.completedLevelIds.size() == 0 || (data.completedLevelIds[0] is string && data.completedLevelIds[0].size() <= 40))
+        ))
         && data.createdAt is timestamp
         && data.updatedAt is timestamp;
     }
@@ -161,6 +169,11 @@ service cloud.firestore {
             isOwner(studentId)
             && incoming().role == existing().role
             && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'targetLevel', 'updatedAt'])
+          )
+          || (
+            isOwner(studentId)
+            && incoming().role == existing().role
+            && incoming().diff(existing()).affectedKeys().hasOnly(['unlockedLevelOrder', 'completedLevelIds', 'updatedAt'])
           )
           || (
             isOwner(studentId)

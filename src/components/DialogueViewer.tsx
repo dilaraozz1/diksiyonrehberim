@@ -27,6 +27,8 @@ interface DialogueViewerProps {
   onSaveResult: (result: {
     evaluation: PronunciationEvaluation;
     historyItem: PracticeHistoryItem;
+    activityType: 'dialogue';
+    contextTitle: string;
   }) => void;
 }
 
@@ -448,7 +450,11 @@ export const DialogueViewer: React.FC<DialogueViewerProps> = ({
                         ...prev,
                         [sentence.id]: res.evaluation.accuracyScore,
                       }));
-                      onSaveResult(res);
+                      onSaveResult({
+                        ...res,
+                        activityType: 'dialogue',
+                        contextTitle: `${sentence.speakerName} · ${currentDialogue.title}`,
+                      });
                     }}
                   />
                 </div>

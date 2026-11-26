@@ -1,5 +1,7 @@
 export type DialogueLevel = 'A1' | 'A2' | 'B1' | 'B2';
 
+export type ActivityType = 'dialogue' | 'studio' | 'diction' | 'twister' | 'word';
+
 export interface WordAnalysis {
   word: string;
   cleanWord: string; // stripped of punctuation
@@ -95,12 +97,54 @@ export interface PracticeHistoryItem {
   intonationLabel?: string;
 }
 
+export interface StudentProfile {
+  uid: string;
+  username: string;
+  displayName: string;
+  targetLevel: DialogueLevel;
+  role: 'student' | 'admin';
+  totalAttempts: number;
+  firstScore: number;
+  latestScore: number;
+  bestScore: number;
+  averageAccuracy: number;
+  averageFluency: number;
+  growthDelta: number;
+  totalPracticeSeconds: number;
+  perfectWordsCount: number;
+  firstActivityAt: string;
+  lastActivityAt: string;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+}
+
+export interface StudentActivityRecord {
+  activityId: string;
+  studentId: string;
+  attemptNumber: number;
+  activityType: ActivityType;
+  contextTitle: string;
+  targetSentence: string;
+  spokenSentence: string;
+  accuracyScore: number;
+  fluencyScore: number;
+  wordsPerMinute: number;
+  durationSeconds: number;
+  perfectWords: number;
+  totalWords: number;
+  averageVolumePercent: number;
+  intonationLabel: string;
+  problemPhonemes: string[];
+  createdAt?: unknown;
+  createdAtMs?: number;
+}
+
 export interface UserStats {
   completedSentencesCount: number;
   averageAccuracy: number;
   totalAttempts: number;
   perfectWordsCount: number;
-  practiceStreakDays: number;
+  growthDelta: number;
 }
 
 export interface TongueTwister {

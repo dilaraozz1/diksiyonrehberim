@@ -8,6 +8,8 @@ interface FreePracticeStudioProps {
   onSaveResult: (result: {
     evaluation: PronunciationEvaluation;
     historyItem: PracticeHistoryItem;
+    activityType: 'studio';
+    contextTitle: string;
   }) => void;
 }
 
@@ -112,7 +114,13 @@ export const FreePracticeStudio: React.FC<FreePracticeStudioProps> = ({
           <VoiceAnalysisPanel
             targetSentence={activeSentence}
             contextTitle={activeCategory}
-            onSaveResult={onSaveResult}
+            onSaveResult={(res) =>
+              onSaveResult({
+                ...res,
+                activityType: 'studio',
+                contextTitle: activeCategory,
+              })
+            }
           />
         </div>
 

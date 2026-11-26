@@ -1,0 +1,209 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened Global Helper Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedOrPasswordStudent() {
+      return isSignedIn() && (
+        request.auth.token.email_verified == true ||
+        request.auth.token.firebase.sign_in_provider == 'password'
+      );
+    }
+
+    function isOwner(userId) {
+      return isVerifiedOrPasswordStudent() && request.auth.uid == userId;
+    }
+
+    function isBootstrappedAdmin() {
+      return isSignedIn()
+        && request.auth.token.email == 'dilaraozz@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin()
+        || (isSignedIn() && request.auth.token.email_verified == true && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    // 3. Entity Validation Blueprints (Anti-Update-Gap)
+    function isValidStudentProfile(data, studentId) {
+      return data.keys().hasAll([
+          'uid', 'username', 'displayName', 'targetLevel', 'role',
+          'totalAttempts', 'firstScore', 'latestScore', 'bestScore',
+          'averageAccuracy', 'averageFluency', 'growthDelta',
+          'totalPracticeSeconds', 'perfectWordsCount',
+          'firstActivityAt', 'lastActivityAt', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'username', 'displayName', 'targetLevel', 'role',
+          'totalAttempts', 'firstScore', 'latestScore', 'bestScore',
+          'averageAccuracy', 'averageFluency', 'growthDelta',
+          'totalPracticeSeconds', 'perfectWordsCount',
+          'firstActivityAt', 'lastActivityAt', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.uid == studentId
+        && data.username is string
+        && data.username.size() >= 3 && data.username.size() <= 32
+        && data.username.matches('^[a-z0-9._-]+$')
+        && data.displayName is string
+        && data.displayName.size() >= 1 && data.displayName.size() <= 80
+        && data.targetLevel in ['A1', 'A2', 'B1', 'B2']
+        && data.role in ['student', 'admin']
+        && data.totalAttempts is int && data.totalAttempts >= 0 && data.totalAttempts <= 100000
+        && data.firstScore is number && data.firstScore >= 0 && data.firstScore <= 100
+        && data.latestScore is number && data.latestScore >= 0 && data.latestScore <= 100
+        && data.bestScore is number && data.bestScore >= 0 && data.bestScore <= 100
+        && data.averageAccuracy is number && data.averageAccuracy >= 0 && data.averageAccuracy <= 100
+        && data.averageFluency is number && data.averageFluency >= 0 && data.averageFluency <= 100
+        && data.growthDelta is number && data.growthDelta >= -100 && data.growthDelta <= 100
+        && data.totalPracticeSeconds is number && data.totalPracticeSeconds >= 0 && data.totalPracticeSeconds <= 10000000
+        && data.perfectWordsCount is int && data.perfectWordsCount >= 0 && data.perfectWordsCount <= 10000000
+        && data.firstActivityAt is string && data.firstActivityAt.size() <= 40
+        && data.lastActivityAt is string && data.lastActivityAt.size() <= 40
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidStudentActivity(data, studentId, activityId) {
+      return data.keys().hasAll([
+          'activityId', 'studentId', 'attemptNumber', 'activityType',
+          'contextTitle', 'targetSentence', 'spokenSentence',
+          'accuracyScore', 'fluencyScore', 'wordsPerMinute',
+          'durationSeconds', 'perfectWords', 'totalWords',
+          'averageVolumePercent', 'intonationLabel', 'problemPhonemes', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'activityId', 'studentId', 'attemptNumber', 'activityType',
+          'contextTitle', 'targetSentence', 'spokenSentence',
+          'accuracyScore', 'fluencyScore', 'wordsPerMinute',
+          'durationSeconds', 'perfectWords', 'totalWords',
+          'averageVolumePercent', 'intonationLabel', 'problemPhonemes', 'createdAt'
+        ])
+        && isValidId(data.activityId)
+        && data.activityId == activityId
+        && isValidId(data.studentId)
+        && data.studentId == studentId
+        && data.studentId == request.auth.uid
+        && data.attemptNumber is int && data.attemptNumber >= 1 && data.attemptNumber <= 100000
+        && data.activityType in ['dialogue', 'studio', 'diction', 'twister', 'word']
+        && data.contextTitle is string && data.contextTitle.size() >= 1 && data.contextTitle.size() <= 140
+        && data.targetSentence is string && data.targetSentence.size() >= 1 && data.targetSentence.size() <= 500
+        && data.spokenSentence is string && data.spokenSentence.size() <= 500
+        && data.accuracyScore is number && data.accuracyScore >= 0 && data.accuracyScore <= 100
+        && data.fluencyScore is number && data.fluencyScore >= 0 && data.fluencyScore <= 100
+        && data.wordsPerMinute is number && data.wordsPerMinute >= 0 && data.wordsPerMinute <= 400
+        && data.durationSeconds is number && data.durationSeconds >= 0 && data.durationSeconds <= 600
+        && data.perfectWords is int && data.perfectWords >= 0 && data.perfectWords <= 200
+        && data.totalWords is int && data.totalWords >= 1 && data.totalWords <= 200
+        && data.averageVolumePercent is number && data.averageVolumePercent >= 0 && data.averageVolumePercent <= 100
+        && data.intonationLabel is string && data.intonationLabel.size() <= 40
+        && data.problemPhonemes is list
+        && data.problemPhonemes.size() <= 10
+        && (data.problemPhonemes.size() == 0 || (data.problemPhonemes[0] is string && data.problemPhonemes[0].size() <= 4))
+        && data.createdAt is timestamp;
+    }
+
+    function isValidAdminRecord(data, adminId) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'email', 'createdAt'])
+        && isValidId(data.uid)
+        && data.uid == adminId
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 120
+        && data.createdAt is timestamp;
+    }
+
+    // 4. Collection: /students/{studentId}
+    match /students/{studentId} {
+      allow get: if isSignedIn() && isValidId(studentId) && (isOwner(studentId) || isAdmin());
+      allow list: if isBootstrappedAdmin();
+
+      allow create: if isOwner(studentId)
+        && isValidId(studentId)
+        && isValidStudentProfile(incoming(), studentId)
+        && incoming().uid == request.auth.uid
+        && incoming().role == 'student'
+        && incoming().totalAttempts == 0
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isSignedIn()
+        && isValidId(studentId)
+        && isValidStudentProfile(incoming(), studentId)
+        && incoming().uid == existing().uid
+        && incoming().username == existing().username
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          isAdmin()
+          || (
+            isOwner(studentId)
+            && incoming().role == existing().role
+            && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'targetLevel', 'updatedAt'])
+          )
+          || (
+            isOwner(studentId)
+            && incoming().role == existing().role
+            && incoming().totalAttempts >= existing().totalAttempts
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'totalAttempts', 'firstScore', 'latestScore', 'bestScore',
+              'averageAccuracy', 'averageFluency', 'growthDelta',
+              'totalPracticeSeconds', 'perfectWordsCount',
+              'firstActivityAt', 'lastActivityAt', 'updatedAt'
+            ])
+          )
+        );
+
+      allow delete: if isAdmin() && isValidId(studentId);
+
+      // 5. Subcollection: /students/{studentId}/activities/{activityId} (Master Gate)
+      match /activities/{activityId} {
+        allow get: if isSignedIn() && isValidId(studentId) && isValidId(activityId) && (isOwner(studentId) || isAdmin());
+        allow list: if isSignedIn() && (
+          isBootstrappedAdmin()
+          || (isVerifiedOrPasswordStudent() && resource.data.studentId == request.auth.uid)
+        );
+
+        allow create: if isOwner(studentId)
+          && isValidId(studentId)
+          && isValidId(activityId)
+          && isValidStudentActivity(incoming(), studentId, activityId)
+          && incoming().createdAt == request.time
+          && exists(/databases/$(database)/documents/students/$(studentId));
+
+        // Immutable chronological progress log
+        allow update: if false;
+        allow delete: if isAdmin() && isValidId(studentId) && isValidId(activityId);
+      }
+    }
+
+    // 6. Collection: /admins/{adminId}
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (isOwner(adminId) || isBootstrappedAdmin());
+      allow list: if isBootstrappedAdmin();
+      allow create, update: if isBootstrappedAdmin() && isValidId(adminId) && isValidAdminRecord(incoming(), adminId) && incoming().createdAt == request.time;
+      allow delete: if isBootstrappedAdmin() && isValidId(adminId);
+    }
+  }
+}

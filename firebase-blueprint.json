@@ -1,0 +1,264 @@
+{
+  "entities": {
+    "StudentProfile": {
+      "title": "StudentProfile",
+      "description": "Authenticated student learning profile and cumulative pronunciation growth summary.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Auth UID of the student."
+        },
+        "username": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-z0-9._-]+$",
+          "description": "Normalized login username of the student."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Student full name displayed on profile and progress reports."
+        },
+        "targetLevel": {
+          "type": "string",
+          "enum": ["A1", "A2", "B1", "B2"],
+          "description": "Student's current CEFR Turkish target level."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["student", "admin"],
+          "description": "Account role; client registration always enforces student."
+        },
+        "totalAttempts": {
+          "type": "integer",
+          "description": "Total number of recorded speech activities completed."
+        },
+        "firstScore": {
+          "type": "number",
+          "description": "Accuracy score (0-100) from the student's very first activity."
+        },
+        "latestScore": {
+          "type": "number",
+          "description": "Accuracy score (0-100) from the most recent activity."
+        },
+        "bestScore": {
+          "type": "number",
+          "description": "Highest accuracy score (0-100) achieved so far."
+        },
+        "averageAccuracy": {
+          "type": "number",
+          "description": "Cumulative average pronunciation accuracy (0-100)."
+        },
+        "averageFluency": {
+          "type": "number",
+          "description": "Cumulative average fluency score (0-100)."
+        },
+        "growthDelta": {
+          "type": "number",
+          "description": "Point improvement between the first activity score and recent performance (-100 to 100)."
+        },
+        "totalPracticeSeconds": {
+          "type": "number",
+          "description": "Cumulative practice duration in seconds."
+        },
+        "perfectWordsCount": {
+          "type": "integer",
+          "description": "Total number of perfectly pronounced Turkish words."
+        },
+        "firstActivityAt": {
+          "type": "string",
+          "format": "date-time",
+          "maxLength": 40,
+          "description": "ISO timestamp of the first recorded activity, or empty string before first activity."
+        },
+        "lastActivityAt": {
+          "type": "string",
+          "format": "date-time",
+          "maxLength": 40,
+          "description": "ISO timestamp of the most recent activity, or empty string before first activity."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the student account profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the student profile was last updated."
+        }
+      },
+      "required": [
+        "uid",
+        "username",
+        "displayName",
+        "targetLevel",
+        "role",
+        "totalAttempts",
+        "firstScore",
+        "latestScore",
+        "bestScore",
+        "averageAccuracy",
+        "averageFluency",
+        "growthDelta",
+        "totalPracticeSeconds",
+        "perfectWordsCount",
+        "firstActivityAt",
+        "lastActivityAt",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StudentActivity": {
+      "title": "StudentActivity",
+      "description": "Immutable record of a single Turkish pronunciation and diction practice attempt.",
+      "type": "object",
+      "properties": {
+        "activityId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Unique document ID for this activity."
+        },
+        "studentId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Owner student UID."
+        },
+        "attemptNumber": {
+          "type": "integer",
+          "description": "Sequential 1-based attempt number from the student's very first activity."
+        },
+        "activityType": {
+          "type": "string",
+          "enum": ["dialogue", "studio", "diction", "twister", "word"],
+          "description": "Category of the Turkish learning activity."
+        },
+        "contextTitle": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140,
+          "description": "Title of the dialogue, diction rule, or practice context."
+        },
+        "targetSentence": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "Target Turkish sentence practiced."
+        },
+        "spokenSentence": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Recognized Turkish speech transcript."
+        },
+        "accuracyScore": {
+          "type": "number",
+          "description": "Pronunciation accuracy score (0-100)."
+        },
+        "fluencyScore": {
+          "type": "number",
+          "description": "Speech fluency and tempo score (0-100)."
+        },
+        "wordsPerMinute": {
+          "type": "number",
+          "description": "Estimated speaking rate in words per minute (0-400)."
+        },
+        "durationSeconds": {
+          "type": "number",
+          "description": "Duration of the voice recording in seconds (0-600)."
+        },
+        "perfectWords": {
+          "type": "integer",
+          "description": "Number of words pronounced with >=85% similarity."
+        },
+        "totalWords": {
+          "type": "integer",
+          "description": "Total target word count in the sentence."
+        },
+        "averageVolumePercent": {
+          "type": "number",
+          "description": "Measured microphone loudness percentage (0-100)."
+        },
+        "intonationLabel": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Classified intonation quality label."
+        },
+        "problemPhonemes": {
+          "type": "array",
+          "description": "List of up to 10 Turkish phonemes needing diction attention."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when this activity was saved."
+        }
+      },
+      "required": [
+        "activityId",
+        "studentId",
+        "attemptNumber",
+        "activityType",
+        "contextTitle",
+        "targetSentence",
+        "spokenSentence",
+        "accuracyScore",
+        "fluencyScore",
+        "wordsPerMinute",
+        "durationSeconds",
+        "perfectWords",
+        "totalWords",
+        "averageVolumePercent",
+        "intonationLabel",
+        "problemPhonemes",
+        "createdAt"
+      ]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Authorized instructor/admin account record.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/StudentProfile" },
+      "description": "Per-student profile document with cumulative growth metrics from first activity onward."
+    },
+    "/students/{studentId}/activities/{activityId}": {
+      "schema": { "$ref": "#/entities/StudentActivity" },
+      "description": "Immutable chronological log of every pronunciation and diction activity completed by a student."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Trusted collection of teacher/admin UIDs."
+    }
+  }
+}
